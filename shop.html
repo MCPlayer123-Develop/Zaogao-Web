@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh">
+    <head>
+        <title>枣糕真好吃 - 商店</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #f4f6f9;
+                margin-left: 200px;
+            }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 150px;
+                height: 100vh;
+                background-color: rgb(113, 133, 49);
+                color: #ecf0f1;
+                overflow-y: auto;
+                box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+                z-index: 1000;
+            }
+
+            .sidebar-header {
+                padding: 20px;
+                background-color: rgb(242, 92, 5);
+                text-align: center;
+                font-weight: bold;
+                border-bottom: 1px solid #34495e;
+                font-size: 30px;
+            }
+
+            .nav-links {
+                list-style: none;
+                padding: 10px 0;
+            }
+
+            .nav-links li a {
+                display: block;
+                padding: 15px 25px;
+                color: #bdc3c7;
+                text-decoration: none;
+                transition: all 0.3s ease;
+                border-left: 4px solid transparent;
+            }
+
+            .nav-links li a:hover,
+            .nav-links li a.active {
+                background-color: rgb(242, 92, 5);
+                color: #fff;
+                border-left-color: #3498db;
+            }
+            .main-content {
+                margin-left: 250px;
+                padding: 40px;
+                min-height: 100vh;
+                transition: margin-left 0.3s ease;
+            }
+
+            .content-card {
+                background: white;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+                margin-bottom: 20px;
+            }
+
+            h1 {
+                color: #2c3e50;
+                margin-bottom: 20px;
+            }
+
+            p {
+                line-height: 1.6;
+                color: #555;
+                margin-bottom: 15px;
+            }
+            @media (max-width: 768px) {
+                .sidebar {
+                    transform: translateX(-100%);
+                    transition: transform 0.3s ease;
+                }
+                
+                .sidebar.mobile-open {
+                    transform: translateX(0);
+                }
+
+                .main-content {
+                    margin-left: 0;
+                }
+                .mobile-toggle {
+                    display: block;
+                    position: fixed;
+                    top: 15px;
+                    right: 15px;
+                    z-index: 1001;
+                    background: #2c3e50;
+                    color: white;
+                    border: none;
+                    padding: 10px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                }
+            }
+
+            @media (min-width: 769px) {
+                .mobile-toggle {
+                    display: none;
+                }
+            }
+            .main_content{
+                text-align: center;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 12px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+                font-weight: bold;
+            }
+            tr:hover {
+                background-color: #f9f9f9;
+            }
+        </style>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+        <script type="text/javascript">
+            (function() {
+                emailjs.init("FuxAlwhhBsXdE1Ue6");
+            })();
+        </script>
+        <script>
+            var storedUsers = [];
+            const userName = [];
+            const passWord = [];
+            const prize = [0, 15, 42.5, 70, 137.5, 588];
+            function getUser(){
+                const userInfoStr = localStorage.getItem('userInfo');
+                if (userInfoStr) {
+                    const userObj = JSON.parse(userInfoStr);
+                    const userName = userObj.username;
+                    const userPassword = userObj.password;
+                    const userMoney = userObj.money;
+                    document.getElementById("welcomeUser").innerHTML=userName;
+                    document.getElementById("moneyLeft").innerHTML="银行余额：$zg$ " + userMoney;
+                    document.getElementById("login").innerHTML="登出";
+                    const hpic = document.getElementById("sidebar_headPic");
+                    hpic.src = "./headPic/" + userName + ".jpg";
+                } else {
+                    window.alert("你似乎并没有登录");
+                    window.location.href = "./login.html";
+                }
+            }
+            function buyItems() {
+                const userInfoStr = localStorage.getItem('userInfo');
+                if (!userInfoStr) window.location.reload();
+                const userObj = JSON.parse(userInfoStr);
+                const userName = userObj.username;
+                const userPassword = userObj.password;
+                var userMoney = userObj.money;
+                var mssg = document.getElementById("mssg").value;
+                var summary = 0;
+                var cntInItem = [];
+                var room = document.getElementById("room").value;
+                if (room == "") {
+                    window.alert("请输入宿舍号，不然Mr.Zaogao不会给你枣糕的");
+                    return ;
+                } else if (room.length != 3) {
+                    window.alert("输入正确的宿舍号");
+                    return ;
+                }
+                for (var i = 1; i <= 5; i++) {
+                    var sumInItem = document.getElementById("item" + i).value * prize[i];
+                    cntInItem[i] = document.getElementById("item" + i).value;
+                    if (document.getElementById("item" + i).value < 0) {
+                        window.alert("你是有病吗？Mr.Zaogao不会向你赔钱");
+                        return ;
+                    }
+                    summary += sumInItem;
+                }
+                window.alert("总价：$zg$ " + summary + "\n银行存款：$zg$ " + userMoney);
+                if (summary > userMoney) {
+                    window.alert("枣糕币不够了");
+                    return ;
+                } else {
+                    window.alert("确认结账？");
+                    userMoney -= summary;
+                    window.alert("剩余存款：$zg$ " + userMoney);
+                    const user = {username: userName, password: userPassword, money: userMoney};
+                    localStorage.setItem('userInfo', JSON.stringify(user));
+
+                    var templateParams = {
+                        message: 
+                            "Username: " + userName + '\n' +
+                            "Room: " + room + '\n' +
+                            "Request: \n" + 
+                            cntInItem[1] + '\n' +
+                            cntInItem[2] + '\n' +
+                            cntInItem[3] + '\n' +
+                            cntInItem[4] + '\n' +
+                            cntInItem[5] + '\n' +
+                            "Message: " + mssg,
+                        to_name: 'ZG User',
+                        from_name: 'ZG User'
+                    };
+                    var serviceID = 'ZaogaoGet';
+                    var templateID = 'ZaogaoGetT';
+        
+                    emailjs.send(serviceID, templateID, templateParams)
+                        .then(function(response) {
+                            console.log('发送成功！', response.status, response.text);
+                        }, function(error) {
+                            console.log('发送失败...', error);
+                        });
+                    }
+            }
+        </script>
+    </head>
+    <body onload="getUser();">
+        <div id="sidebar" class="sidebar">
+            <div id="sidebar_header" class="sidebar-header">
+                枣糕
+            </div>
+            <div class="sidebar-header">
+                <img id="sidebar_headPic" src="" alt="未登录" width="75" height="75"></img>
+            </div>
+            <ul class="nav-links">
+                <li><a href="./index.html">首页</a></li>
+                <li><a href="./shop.html">商店</a></li>
+                <li><a href="./bank.html">银行</a></li>
+                <li><a href="./login.html" id="login">登录</a></li>
+                <li><a href="./user.html" id="welcomeUser"></a></li>
+                <li><a href="./money.html">赚钱</a></li>
+            </ul>
+        </div>
+        <div id="main" class="main_content">
+            <h4 id="moneyLeft"></h4>
+            <p>请不要购买太多次，一天所有用户购买请求最多300次</p>
+            <input id="room" placeholder="宿舍号"></input><br>
+            <table id="itemList">
+                <thead>
+                    商品价目表
+                    <tr>
+                        <th>图片</th>
+                        <th>名称</th>
+                        <th>单价</th>
+                        <th>数量</th>
+                    </tr>
+                </thead>
+                <tr>
+                    <th>
+                        <img src="./images/zg3.jpg" alt="zg3" width="100" height="100"></img>
+                    </th>
+                    <th>
+                        <p>枣糕</p>
+                    </th>
+                    <th>
+                        $zg$ 15
+                    </th>
+                    <th>
+                        <input type="number" id="item1" placeholder="数量"></input>
+                    </th>
+                </tr>
+                <tr>
+                    <th>
+                        <img src="./images/zg3.jpg" alt="zg3" width="100" height="100"></img>
+                    </th>
+                    <th>
+                        <p>3个枣糕</p>
+                    </th>
+                    <th>
+                        $zg$ 42.5
+                    </th>
+                    <th>
+                        <input type="number" id="item2" placeholder="数量"></input>
+                    </th>
+                </tr>
+                <tr>
+                    <th>
+                        <img src="./images/zg3.jpg" alt="zg3" width="100" height="100"></img>
+                    </th>
+                    <th>
+                        <p>5个枣糕</p>
+                    </th>
+                    <th>
+                        $zg$ 70
+                    </th>
+                    <th>
+                        <input type="number" id="item3" placeholder="数量"></input>
+                    </th>
+                </tr>
+                <tr>
+                    <th>
+                        <img src="./images/zg3.jpg" alt="zg3" width="100" height="100"></img>
+                    </th>
+                    <th>
+                        <p>10个枣糕</p>
+                    </th>
+                    <th>
+                        $zg$ 137.5
+                    </th>
+                    <th>
+                        <input type="number" id="item4" placeholder="数量"></input>
+                    </th>
+                </tr>
+                <tr>
+                    <th>
+                        <img src="./images/zg1.jpg" alt="zg1" width="100" height="100"></img>
+                    </th>
+                    <th>
+                        <p>1包枣糕</p>
+                    </th>
+                    <th>
+                        $zg$ 588
+                    </th>
+                    <th>
+                        <input type="number" id="item5" placeholder="数量"></input>
+                    </th>
+                </tr>
+            </table>
+            <textarea placeholder="备注..." id="mssg"></textarea><br>
+            <button style="background-color: rgb(242, 92, 5); padding: 10px 30px;" onclick="buyItems()">购买</button>
+        </div>
+    <!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+</body>
+</html>

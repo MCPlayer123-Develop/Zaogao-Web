@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh">
+    <head>
+        <title>枣糕真好吃 - 银行</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #f4f6f9;
+                margin-left: 200px;
+            }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 150px;
+                height: 100vh;
+                background-color: rgb(113, 133, 49);
+                color: #ecf0f1;
+                overflow-y: auto;
+                box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+                z-index: 1000;
+            }
+            .banksidebar {
+                position: fixed;
+                top: 0;
+                left: 0px;
+                width: 150px;
+                height: 100vh;
+                background-color: rgb(113, 133, 49);
+                color: #ecf0f1;
+                overflow-y: auto;
+                box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+                z-index: 1000;
+            }
+
+            .sidebar-header {
+                padding: 20px;
+                background-color: rgb(242, 92, 5);
+                text-align: center;
+                font-weight: bold;
+                border-bottom: 1px solid #34495e;
+                font-size: 30px;
+            }
+
+            .nav-links {
+                list-style: none;
+                padding: 10px 0;
+            }
+
+            .nav-links li a {
+                display: block;
+                padding: 15px 25px;
+                color: #bdc3c7;
+                text-decoration: none;
+                transition: all 0.3s ease;
+                border-left: 4px solid transparent;
+            }
+
+            .nav-links li a:hover,
+            .nav-links li a.active {
+                background-color: rgb(242, 92, 5);
+                color: #fff;
+                border-left-color: #3498db;
+            }
+            .main-content {
+                margin-left: 250px;
+                padding: 40px;
+                min-height: 100vh;
+                transition: margin-left 0.3s ease;
+            }
+
+            .content-card {
+                background: white;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+                margin-bottom: 20px;
+            }
+
+            h1 {
+                color: #2c3e50;
+                margin-bottom: 20px;
+            }
+
+            p {
+                line-height: 1.6;
+                color: #555;
+                margin-bottom: 15px;
+            }
+            @media (max-width: 768px) {
+                .sidebar {
+                    transform: translateX(-100%);
+                    transition: transform 0.3s ease;
+                }
+                
+                .sidebar.mobile-open {
+                    transform: translateX(0);
+                }
+
+                .main-content {
+                    margin-left: 0;
+                }
+                .mobile-toggle {
+                    display: block;
+                    position: fixed;
+                    top: 15px;
+                    right: 15px;
+                    z-index: 1001;
+                    background: #2c3e50;
+                    color: white;
+                    border: none;
+                    padding: 10px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                }
+            }
+
+            @media (min-width: 769px) {
+                .mobile-toggle {
+                    display: none;
+                }
+            }
+            .verify_content_hidden{
+                text-align: center;
+                display: none;
+            }
+            .verify_content_shown{
+                text-align: center;
+                display: block;
+            }
+            .main_content_hidden{
+                display: none;
+            }
+            .main_content_shown{
+                display: block;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 12px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+                font-weight: bold;
+            }
+            tr:hover {
+                background-color: #f9f9f9;
+            }
+            .stockUp{color: red;}
+            .stockDown{color: springgreen;}
+            .stockNo{color: white;}
+        </style>
+        <script>
+            var storedUsers = [];
+            const userNameList = [];
+            const passWordList = [];
+            const prize = [0, 10, 25, 40, 78, 388];
+            var userName, userMoney, userPassword;
+            var v = [];
+            var stockStatus = 0;
+            var luck = -1;
+            
+            function getUser(){
+                const userInfoStr = localStorage.getItem('userInfo');
+                if (userInfoStr) {
+                    const userObj = JSON.parse(userInfoStr);
+                    userName = userObj.username;
+                    userPassword = userObj.password;
+                    userMoney = userObj.money;
+                    document.getElementById("welcomeUser").innerHTML=userName;
+                    document.getElementById("moneyLeft").innerHTML="银行余额：$zg$ " + userMoney;
+                    document.getElementById("login").innerHTML="登出";
+                    const hpic = document.getElementById("sidebar_headPic");
+                    hpic.src = "./headPic/" + userName + ".jpg";
+                } else {
+                    window.alert("你似乎并没有登录");
+                    window.location.href = "./login.html";
+                }
+            }
+            function verifyCodeRander() {
+                v = [Math.floor(Math.random() * 9), Math.floor(Math.random() * 9), Math.floor(Math.random() * 9), Math.floor(Math.random() * 9)];
+                document.getElementById("verifyContent").innerHTML = String(v[0]) + String(v[1]) + String(v[2]) + String(v[3]);
+            }
+            function confirmVerify() {
+                const inputp = document.getElementById("inputpassword").value;
+                const inputv = document.getElementById("verifyCode").value; 
+                const vcode = String(v[0]) + String(v[1]) + String(v[2]) + String(v[3]);
+                if (inputp != userPassword) {
+                    window.alert("用户名或密码错误！你别想吃枣糕！\nThe username or password you in put are wrong, so you can't eat jujube paste(Zaogao)");
+                } else if (vcode != inputv) {
+                    window.alert("验证码错误！人机别吃枣糕！\nThe verify code you in put are wrong, a auto-bot can't eat jujube paste(Zaogao)");
+                } else {
+                    window.alert("验证成功！看来你是" + userName + "！");
+                    document.getElementById("verifyer").className = "verify_content_hidden";
+                    document.getElementById("main").className = "main_content_shown";
+                }
+            }
+            var stockVal = 2.00, x = 0, lst = 0.00, change = 0.00;
+            function renderDraw() {
+                const canvas = document.getElementById('stockCanvas');
+                const ctx = canvas.getContext('2d');
+                ctx.beginPath();
+                ctx.moveTo(x, 1 - (lst - 1) * 600 + 600);
+                x += 10;
+                ctx.lineTo(x, 1 - (stockVal - 1) * 600 + 600);
+                ctx.lineWidth = 2;
+                if (stockVal > lst) {ctx.strokeStyle = 'red'; document.getElementById('stockValue').className = "stockUp";}
+                else if (stockVal < lst) {ctx.strokeStyle = 'green'; document.getElementById('stockValue').className = "stockDown";}
+                else if (stockVal == lst) {ctx.strokeStyle = 'white'; document.getElementById('stockValue').className = "stockNo";}
+                if (stockVal > lst) {document.getElementById('stockChange').className = "stockUp"; document.getElementById('stockChange').innerHTML = '↑ ' + Math.floor(change * 100) / 100;}
+                else if (stockVal < lst) {document.getElementById('stockChange').className = "stockDown"; document.getElementById('stockChange').innerHTML = '↓ ' + Math.floor(change * 100) / 100;}
+                else if (stockVal == lst) {document.getElementById('stockChange').className = "stockNo"; document.getElementById('stockChange').innerHTML = Math.floor(change * 100) / 100;}
+                document.getElementById('stockValue').innerHTML = stockVal;
+                
+                ctx.stroke();
+                ctx.closePath();
+                lst = stockVal;
+            }
+            setInterval(function stockRender() {
+                const canvas = document.getElementById('stockCanvas');
+                const ctx = canvas.getContext('2d');
+
+                if (x > 800) ctx.clearRect(0, 0, 800, 600), x = 0;
+
+                if (stockStatus == 0) {
+                    change = Math.floor((Math.random() * 0.5 - 0.25) * 100) / 100;
+                    stockVal = lst + change;
+                    stockVal = Math.max (stockVal, 1);
+                    stockVal = Math.min (stockVal, 2);
+                } else if (stockStatus == 1) {
+                    change = Math.floor((Math.random() * 0.5) * 100) / 100;
+                    stockVal = Math.floor((lst + change) * 100) / 100;
+                    stockVal = Math.max (stockVal, 1);
+                    stockVal = Math.min (stockVal, 2);
+                } else if (stockStatus == 2) {
+                    change = Math.floor((Math.random() * 0.5 + 0.25) * 100) / 100;
+                    stockVal = Math.floor((lst - change) * 100) / 100;
+                    stockVal = Math.max (stockVal, 1);
+                    stockVal = Math.min (stockVal, 2);
+                }
+                renderDraw();
+            }, 1000);
+            
+            function tricker(){
+                luck = Math.floor(Math.random() * 100);
+                if (luck <= 2) {
+                    return ;
+                }
+                var buyInBtn = document.getElementById("buyIn");
+                var sellOutBtn = document.getElementById("sellOut");
+                buyInBtn.addEventListener('mouseover', () => {
+                    stockStatus = 1;
+                });
+                buyInBtn.addEventListener('mouseleave', () => {
+                    stockStatus = 0;
+                });
+                sellOutBtn.addEventListener('mouseover', () => {
+                    stockStatus = 2;
+                });
+                sellOutBtn.addEventListener('mouseleave', () => {
+                    stockStatus = 0;
+                });
+                var buyInInput = document.getElementById("buyInSum");
+                var sellOutInput = document.getElementById("sellOutSum");
+                buyInInput.addEventListener('input', () => {
+                    stockStatus = 1;
+                });
+                sellOutInput.addEventListener('input', () => {
+                    stockStatus = 2;
+                });
+            }
+            function stockBuyIn() {
+                document.getElementById("stockBuyInContent").className = "main_content_shown";
+                document.getElementById("stockSellOutContent").className = "main_content_hidden";
+            }
+            function stockSellOut() {
+                document.getElementById("stockBuyInContent").className = "main_content_hidden";
+                document.getElementById("stockSellOutContent").className = "main_content_shown";
+            }
+            var nowBuy = 0, buyTotal = 0;
+            function stockBuyInConfirm() {
+                var userStockStr = localStorage.getItem('userStockTimes');
+                if (userStockStr) {
+                    const userObj = JSON.parse(userStockStr);
+                    nowBuy = userObj.times;
+                } else nowBuy = 0;
+                userStockStr = localStorage.getItem('stockTot');
+                if (userStockStr) {
+                    const userObj = JSON.parse(userStockStr);
+                    buyTotal = userObj.times;
+                } else buyTot = 0;
+                if (luck > 2) {
+                    stockVal += Math.floor(Math.random() * 0.5) + 0.75;
+                    stockVal = Math.max (stockVal, 1);
+                    stockVal = Math.min (stockVal, 2);
+                }
+                renderDraw();
+                var confirmVal = stockVal;
+                var buySum = document.getElementById("buyInSum").value;
+                if (userMoney < confirmVal * buySum) {window.alert("不够钱就买股票？"); return ;}
+                else if (Number(buyTotal) + Number(buySum) > 15) {window.alert("666，别买了，你会执迷不悟的");}
+                else if (buySum < 0 || buySum != Math.floor(buySum)) {window.alert("God d**n, f**k you.");}
+                else {
+                    userMoney -= confirmVal * buySum;
+                    nowBuy = Number(nowBuy) + Number(buySum);
+                    buyTotal = Number(buyTotal) + Number(buySum);
+                    const userStock = {times: nowBuy};
+                    localStorage.setItem('userStockTimes', JSON.stringify(userStock));
+                    const userStockTot = {times: buyTotal};
+                    localStorage.setItem('stockTot', JSON.stringify(userStockTot));
+                    window.alert("股票投资成功！" + "\n确认时每股：$zg$" + confirmVal + "\n投资总价：$zg$" + confirmVal * buySum + "\n剩余枣糕币：$zg$" + userMoney);
+                    document.getElementById("stockSum").innerHTML = "现有持股：" + nowBuy;
+                    document.getElementById("moneyLeft").innerHTML="银行余额：$zg$ " + userMoney;
+                }
+            }
+            function stockSellOutComfirm() {
+                if (luck > 2) {
+                    stockVal -= Math.floor(Math.random() * 0.5) + 1;
+                    stockVal = Math.max (stockVal, 1);
+                    stockVal = Math.min (stockVal, 2);
+                }
+                renderDraw();
+                var confirmVal = stockVal;
+                var sellSum = document.getElementById("sellOutSum").value;
+                if (nowBuy < sellSum) {window.alert("没买入就卖出？"); return ;}
+                else if (sellSum < 0 || sellSum != Math.floor(sellSum)) {window.alert("God d**n, f**k you.");}
+                else {
+                    userMoney += confirmVal * sellSum;
+                    nowBuy = Number(nowBuy) - Number(sellSum);
+                    window.alert("股票卖出成功！" + "\n确认时每股：$zg$" + confirmVal + "\n卖出总价：$zg$" + confirmVal * sellSum + "\n剩余枣糕币：$zg$" + userMoney);
+                    
+                    const userStock = {times: nowBuy};
+                    localStorage.setItem('userStockTimes', JSON.stringify(userStock));
+                    document.getElementById("stockSum").innerHTML = "现有持股：" + nowBuy;
+                    document.getElementById("moneyLeft").innerHTML="银行余额：$zg$ " + userMoney;
+                    
+                    const user = {username: userName, password: userPassword, money: userMoney};
+                    localStorage.setItem('userInfo', JSON.stringify(user));
+                }
+            }
+            function checkTime() {
+                const now = new Date();
+                const h = now.getHours();
+                const m = now.getMinutes();
+                const s = now.getSeconds();
+                if (h < 8 || h > 12) {
+                    document.getElementById("stock").innerHTML = "现在暂未开市";
+                } else {
+                    return ;
+                }
+            }
+        </script>
+    </head>
+    <body onload="getUser(); tricker(); checkTime();">
+        <div id="sidebar" class="sidebar">
+            <div id="sidebar_header" class="sidebar-header">
+                枣糕
+            </div>
+            <div class="sidebar-header">
+                <img id="sidebar_headPic" src="" alt="未登录" width="75" height="75"></img>
+            </div>
+            <ul class="nav-links">
+                <li><a href="./index.html">首页</a></li>
+                <li><a href="./shop.html">商店</a></li>
+                <li><a href="./bank.html">银行</a></li>
+                <li><a href="./login.html" id="login">登录</a></li>
+                <li><a href="./user.html" id="welcomeUser"></a></li>
+                <li><a href="./money.html">赚钱</a></li>
+            </ul>
+        </div>
+        <div id="verifyer" class="verify_content_shown">
+            <h1>我们需要确认那是你</h1>
+            <input type="password" id="inputpassword" placeholder="输入密码以确认"></input><br>
+            <input type="text" id="verifyCode" placeholder="图形验证码"></input>
+            <button onclick="verifyCodeRander()">获取</button>
+            <div id="verifyContent" style="height: 15px; text-align: center;"></div><br>
+            <button onclick="confirmVerify()">提交</button>
+        </div>
+        
+        <div id="main" class="main_content_hidden">
+            <div id="banksidebar" class="banksidebar">
+                <div id="sidebar_header" class="sidebar-header">
+                    枣糕
+                </div>
+                <ul class="nav-links">
+                    <li><a href="#user">账户信息</a></li>
+                    <li><a href="#saving">存款</a></li>
+                    <li><a href="#loan">贷款</a></li>
+                    <li><a href="#stock">股票</a></li>
+                    <li><a href="./index.html">返回</a></li>
+                </ul>
+            </div>
+            <div id="user">
+                <h2>账户信息</h2>
+                <h4 id="moneyLeft"></h4>
+            </div>
+            <div id="saving">
+                <h2>存款</h2>
+                <p>I'm developing</p>
+            </div>
+            <div id="loan">
+                <h2>贷款</h2>
+                <p>I'm developing</p>
+            </div>
+            <div id="stock">
+                <h2>股票</h2>
+                <div id="stockValue" style="font-size: 20px">0.00</div>
+                <div id="stockChange" style="font-size: 20px"></div>
+                <div id="stockSum" style="font-size: 20px">现有持股：0</div>
+                <canvas id="stockCanvas" width="800" height="600" style="border:1px solid #ccc;"></canvas>
+                <br>
+                <button id="buyIn" onclick="stockBuyIn()" style="padding: 10px 30px; background-color: tomato;">买入</button>
+                <button id="sellOut" onclick="stockSellOut()" style="padding: 10px 30px; background-color: springgreen;">卖出</button>
+                <div id="stockBuyInContent" class="main_content_hidden">
+                    <input id="buyInSum" placeholder="输入买入股票数量"></input>
+                    <button onclick="stockBuyInConfirm()" style="padding: 10px 30px; background-color: rgb(242, 92, 5);">确认</button>
+                </div>
+                <div id="stockSellOutContent" class="main_content_hidden">
+                    <input id="sellOutSum" placeholder="输入卖出股票数量"></input>
+                    <button onclick="stockSellOutComfirm()" style="padding: 10px 30px; background-color: rgb(242, 92, 5);">确认</button>
+                </div>
+                <br><br><br><br><br><br><br><br><br><br>
+            </div>
+        </div>
+    <!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+</body>
+</html>

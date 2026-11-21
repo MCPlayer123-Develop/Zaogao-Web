@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh">
+    <head>
+        <title>枣糕真好吃 - 游戏：枣糕快跑</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #f4f6f9;
+                margin-left: 200px;
+            }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 150px;
+                height: 100vh;
+                background-color: rgb(113, 133, 49);
+                color: #ecf0f1;
+                overflow-y: auto;
+                box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+                z-index: 1000;
+            }
+            .banksidebar {
+                position: fixed;
+                top: 0;
+                left: 0px;
+                width: 150px;
+                height: 100vh;
+                background-color: rgb(113, 133, 49);
+                color: #ecf0f1;
+                overflow-y: auto;
+                box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+                z-index: 1000;
+            }
+
+            .sidebar-header {
+                padding: 20px;
+                background-color: rgb(242, 92, 5);
+                text-align: center;
+                font-weight: bold;
+                border-bottom: 1px solid #34495e;
+                font-size: 30px;
+            }
+
+            .nav-links {
+                list-style: none;
+                padding: 10px 0;
+            }
+
+            .nav-links li a {
+                display: block;
+                padding: 15px 25px;
+                color: #bdc3c7;
+                text-decoration: none;
+                transition: all 0.3s ease;
+                border-left: 4px solid transparent;
+            }
+
+            .nav-links li a:hover,
+            .nav-links li a.active {
+                background-color: rgb(242, 92, 5);
+                color: #fff;
+                border-left-color: #3498db;
+            }
+            .main-content {
+                margin-left: 250px;
+                padding: 40px;
+                min-height: 100vh;
+                transition: margin-left 0.3s ease;
+            }
+
+            .content-card {
+                background: white;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+                margin-bottom: 20px;
+            }
+
+            h1 {
+                color: #2c3e50;
+                margin-bottom: 20px;
+            }
+
+            p {
+                line-height: 1.6;
+                color: #555;
+                margin-bottom: 15px;
+            }
+            @media (max-width: 768px) {
+                .sidebar {
+                    transform: translateX(-100%);
+                    transition: transform 0.3s ease;
+                }
+                
+                .sidebar.mobile-open {
+                    transform: translateX(0);
+                }
+
+                .main-content {
+                    margin-left: 0;
+                }
+                .mobile-toggle {
+                    display: block;
+                    position: fixed;
+                    top: 15px;
+                    right: 15px;
+                    z-index: 1001;
+                    background: #2c3e50;
+                    color: white;
+                    border: none;
+                    padding: 10px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                }
+            }
+
+            @media (min-width: 769px) {
+                .mobile-toggle {
+                    display: none;
+                }
+            }
+            .main_content{
+                text-align: center;
+                display: block;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 12px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+                font-weight: bold;
+            }
+            tr:hover {
+                background-color: #f9f9f9;
+            }
+            .stockUp{color: red;}
+            .stockDown{color: springgreen;}
+            .stockNo{color: white;}
+            .buttonHidden{display: none;}
+        </style>
+        <script>
+            var storedUsers = [];
+            const userNameList = [];
+            const passWordList = [];
+            const prize = [0, 10, 25, 40, 78, 388];
+            var userName, userMoney, userPassword;
+            var userAction = "Nothing";
+            var CanvasMap = [];
+            var player_x = 0, placeholderCnt = 0, nxtPlaceholder = Math.floor(Math.random() * 2 * 125) + 2 * 250, speed = 2;
+            var playerJumpStatus = 0, playerJumpStatus1 = 0, energy = 10.0, startJumpUp = 0, startJumpDown = 0;
+            var dis = 0, player_y = 220;
+            var highestLen = 0, playerMoneyCnt = 0;
+            
+            function getUser(){
+                const userInfoStr = localStorage.getItem('userInfo');
+                if (userInfoStr) {
+                    const userObj = JSON.parse(userInfoStr);
+                    userName = userObj.username;
+                    userPassword = userObj.password;
+                    userMoney = userObj.money;
+                    document.getElementById("welcomeUser").innerHTML=userName;
+                    document.getElementById("moneyLeft").innerHTML="银行余额：$zg$ " + userMoney;
+                    document.getElementById("login").innerHTML="登出";
+                    const hpic = document.getElementById("sidebar_headPic");
+                    hpic.src = "./headPic/" + userName + ".jpg";
+                } else {
+                    window.alert("你似乎并没有登录");
+                    window.location.href = "./login.html";
+                }
+            }
+            function initCanvas() {
+                const t = localStorage.getItem('zaogaoGoHighest');
+                if (t) {
+                    const userObj = JSON.parse(t);
+                    highestLen = userObj.highest;
+                } else highestLen = 0;
+                player_x = 0, placeholderCnt = 0, nxtPlaceholder = Math.floor(Math.random() * 2 * 125) + 2 * 250, speed = 2;
+                playerJumpStatus = 0, playerJumpStatus1 = 0, energy = 10.0;
+                dis = 0, player_y = 220;
+                document.getElementById('startButton').className = "buttonHidden";
+                for (var i = 0; i < 800; i++) {
+                    CanvasMap[i] = 0;
+                }
+            }
+            setInterval(function CanvasRender() {
+                if (dis >= 40) return ;
+                const canvas = document.getElementById("gameCanvas");
+                const ctx = canvas.getContext('2d');
+                var img = new Image();
+                img.src = './images/zg1.jpg';
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.beginPath();
+                ctx.moveTo(0, 300);
+                ctx.lineTo(800, 300);
+                ctx.strokeStyle = 'black';
+                ctx.width = 5;
+                ctx.stroke();
+                ctx.closePath();
+                for (var i = 0; i < 800 / speed; i++) {
+                    if (CanvasMap[i] == 0) {
+                        
+                    } else if (CanvasMap[i] == 1) {
+                        img.src = './images/zg1.jpg';
+                        ctx.drawImage(img, i * speed - dis, 220, 40, 80);
+                    } else if (CanvasMap[i] == 2) {
+                        img.src = './images/zg3.jpg';
+                        ctx.drawImage(img, i * speed - dis, 260, 40, 40);
+                    }
+                }
+                dis++;
+            }, 5);
+            setInterval(function playerJumpUpAni() {
+                if (startJumpUp == 0) return ;
+                const canvas = document.getElementById("gameCanvas");
+                const ctx = canvas.getContext('2d');
+                player_y = Math.max (0, player_y - speed / 2);
+                if (player_y <= 0) startJumpUp = 0, startJumpDown = 1;
+            }, 5);
+            setInterval(function playerJumpDownAni() {
+                if (startJumpDown == 0) return ;
+                const canvas = document.getElementById("gameCanvas");
+                const ctx = canvas.getContext('2d');
+                player_y = Math.min (220, player_y + speed / 2);
+                if (player_y >= 220) startJumpDown = 0;
+            }, 5);
+            function CanvasUpdater() {
+                //Check Player Action
+                if ((userAction == "KeyW" || userAction == "Space" || userAction == "ArrowUp") && (!startJumpUp && !startJumpDown)) {
+                    energy -= 0.005;
+                    player_y = 220, startJumpUp = 1;
+                }
+                //Render
+                const canvas = document.getElementById("gameCanvas");
+                const ctx = canvas.getContext('2d');
+                var img = new Image();
+                img.src = './images/zg1.jpg';
+                img.onload = function(){
+                    dis = 0;
+                }
+                player_x += speed;
+                playerMoneyCnt += speed;
+                placeholderCnt += speed;
+                energy -= 0.001;
+                playerJumpStatus = Math.max (0, --playerJumpStatus);
+                playerJumpStatus1 = Math.max (0, --playerJumpStatus1);
+                if (player_y > 220) player_y = 220;
+                if (player_x % 5000 == 0) speed = Math.min (800, speed + 2);
+                if (playerMoneyCnt >= 10000) {
+                    userMoney++, playerMoneyCnt = 0;
+                    document.getElementById("moneyLeft").innerHTML="银行余额：$zg$ " + userMoney;
+                    const user = {username: userName, password: userPassword, money: userMoney};
+                    localStorage.setItem('userInfo', JSON.stringify(user));
+                }
+                if (energy <= 0) {
+                    highestLen = Math.max (highestLen, player_x);
+                    window.alert("Game Over!\nZaogao饿死了\n" + "You ran " + player_x + "m\n" + "Highest: " + highestLen + "m");
+                    document.getElementById('startButton').className = "";
+                    document.getElementById('startButton').innerHTML = "Retry?";
+                    const t = {highest: highestLen};
+                    localStorage.setItem('zaogaoGoHighest', JSON.stringify(t));
+                    return ;
+                }
+                document.getElementById('runLength').innerHTML = player_x.toFixed(5);
+                document.getElementById('energySummary').innerHTML = 'EN ' + energy.toFixed(5);
+                document.getElementById('highestLength').innerHTML = 'HI ' + highestLen.toFixed(5);
+                ctx.fillStyle = 'rgb(242, 92, 5)';
+                ctx.fillRect(50, player_y, 40, 80);
+
+                //Check Blocks
+                for (var i = 0; i < 800 / speed; i++) {
+                    var bx1 = i * speed, bx2, by1, by2;
+                    var x1 = 50, x2 = 90, y1 = player_y, y2 = player_y + 80;
+                    if (CanvasMap[i] == 0) {
+                        
+                    } else if (CanvasMap[i] == 1) {
+                        bx2 = bx1 + 40, by1 = 220, by2 = 300;
+                        if ((bx1 <= x1 && x1 <= bx2 && by1 <= y1 && y1 <= by2) ||
+                            (bx1 <= x2 && x2 <= bx2 && by1 <= y2 && y2 <= by2) ||
+                            (bx1 <= x1 && x1 <= bx2 && by1 <= y2 && y2 <= by2) ||
+                            (bx1 <= x2 && x2 <= bx2 && by1 <= y1 && y1 <= by2)
+                        ) {
+                            highestLen = Math.max (highestLen, player_x);
+                            window.alert("Game Over!\nZaogao碰到了一包枣糕\n" + "You ran " + player_x + "m\n" + "Highest: " + highestLen + "m");
+                            document.getElementById('startButton').className = "";
+                            document.getElementById('startButton').innerHTML = "Retry?";
+                            const t = {highest: highestLen};
+                            localStorage.setItem('zaogaoGoHighest', JSON.stringify(t));
+                            return ;
+                        }
+                    } else if (CanvasMap[i] == 2) {
+                        bx2 = bx1 + 40, by1 = 260, by2 = 300;
+                        if ((bx1 <= x1 && x1 <= bx2 && by1 <= y1 && y1 <= by2) ||
+                            (bx1 <= x2 && x2 <= bx2 && by1 <= y2 && y2 <= by2) ||
+                            (bx1 <= x1 && x1 <= bx2 && by1 <= y2 && y2 <= by2) ||
+                            (bx1 <= x2 && x2 <= bx2 && by1 <= y1 && y1 <= by2)
+                        ) {
+                            energy += 1;
+                            CanvasMap[i] = 0;
+                        }
+                    }
+                }
+                
+                for (var i = 2; i <= 800 / speed + 2; i++) {//Roll
+                    CanvasMap[i - 1] = CanvasMap[i];
+                }
+                CanvasMap[800 / speed - 1] = 0;
+                if (placeholderCnt >= nxtPlaceholder) {
+                    var val = Math.floor(Math.random() * 2);
+                    if (val == 0) CanvasMap[800 / speed - 1] = 1;
+                    else if (val == 1) CanvasMap[800 / speed - 1] = 2;
+                    placeholderCnt = 0;
+                    nxtPlaceholder = Math.floor(Math.random() * 250) + 500;
+                }
+
+                requestAnimationFrame(CanvasUpdater);
+            }
+            function CanvasListener() {
+                window.addEventListener('keydown', (e) => {
+                    const keyDownCode = e.code;
+                    userAction = keyDownCode;
+                    console.log(userAction);
+                });
+                window.addEventListener('keyup', (e) => {
+                    userAction = "Nothing";
+                })
+            }
+        </script>
+    </head>
+    <body onload="getUser()">
+        <div id="sidebar" class="sidebar">
+            <div id="sidebar_header" class="sidebar-header">
+                枣糕
+            </div>
+            <div class="sidebar-header">
+                <img id="sidebar_headPic" src="" alt="未登录" width="75" height="75"></img>
+            </div>
+            <ul class="nav-links">
+                <li><a href="./index.html">首页</a></li>
+                <li><a href="./shop.html">商店</a></li>
+                <li><a href="./bank.html">银行</a></li>
+                <li><a href="./login.html" id="login">登录</a></li>
+                <li><a href="./user.html" id="welcomeUser"></a></li>
+                <li><a href="./money.html">赚钱</a></li>
+            </ul>
+        </div>
+        <div id="main" class="main_content">
+            <h2>枣糕快跑</h2>
+            <h4 id="moneyLeft"></h4>
+            <h3>怎么玩？</h3>
+            <ul>
+                <li>点击"Zaogao Go!"开始游戏</li>
+                <li>一包枣糕碰到会被刺死</li>
+                <li>一堆枣糕可以补充 1 点 EN (能量)</li>
+                <li>尽可能跑得更远！每10000m可以获得$zg$ 1！</li>
+            </ul>
+            <div id="runLength" style="font-size: 20px; font-family: Lucida Console">0.00</div>
+            <div id="energySummary" style="font-size: 20px; font-family: Lucida Console">EN 0.00</div>
+            <div id="highestLength" style="font-size: 20px; font-family: Lucida Console">HI 0.00</div>
+            <canvas id="gameCanvas" width="800" height="600" style="border: 1px solid #ccc;"></canvas><br>
+            <button id="startButton" onclick="initCanvas(); CanvasListener(); CanvasUpdater();" style="padding: 10px 30px; background-color: tomato;">Zaogao Go!</button>
+        </div>
+</body>
+</html>

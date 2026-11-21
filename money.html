@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh">
+    <head>
+        <title>枣糕真好吃 - 活动</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #f4f6f9;
+                margin-left: 200px;
+            }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 150px;
+                height: 100vh;
+                background-color: rgb(113, 133, 49);
+                color: #ecf0f1;
+                overflow-y: auto;
+                box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+                z-index: 1000;
+            }
+
+            .sidebar-header {
+                padding: 20px;
+                background-color: rgb(242, 92, 5);
+                text-align: center;
+                font-weight: bold;
+                border-bottom: 1px solid #34495e;
+                font-size: 30px;
+            }
+
+            .nav-links {
+                list-style: none;
+                padding: 10px 0;
+            }
+
+            .nav-links li a {
+                display: block;
+                padding: 15px 25px;
+                color: #bdc3c7;
+                text-decoration: none;
+                transition: all 0.3s ease;
+                border-left: 4px solid transparent;
+            }
+
+            .nav-links li a:hover,
+            .nav-links li a.active {
+                background-color: rgb(242, 92, 5);
+                color: #fff;
+                border-left-color: #3498db;
+            }
+            .main-content {
+                margin-left: 250px;
+                padding: 40px;
+                min-height: 100vh;
+                transition: margin-left 0.3s ease;
+            }
+
+            .content-card {
+                background: white;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+                margin-bottom: 20px;
+            }
+
+            h1 {
+                color: #2c3e50;
+                margin-bottom: 20px;
+            }
+
+            p {
+                line-height: 1.6;
+                color: #555;
+                margin-bottom: 15px;
+            }
+            @media (max-width: 768px) {
+                .sidebar {
+                    transform: translateX(-100%);
+                    transition: transform 0.3s ease;
+                }
+                
+                .sidebar.mobile-open {
+                    transform: translateX(0);
+                }
+
+                .main-content {
+                    margin-left: 0;
+                }
+                .mobile-toggle {
+                    display: block;
+                    position: fixed;
+                    top: 15px;
+                    right: 15px;
+                    z-index: 1001;
+                    background: #2c3e50;
+                    color: white;
+                    border: none;
+                    padding: 10px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                }
+            }
+
+            @media (min-width: 769px) {
+                .mobile-toggle {
+                    display: none;
+                }
+            }
+            .main_content{
+                text-align: center;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 12px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+                font-weight: bold;
+            }
+            tr:hover {
+                background-color: #f9f9f9;
+            }
+        </style>
+        <script>
+            var stm = [0, 0];
+            var enm = [0, 0];
+            var mt = [0, 120000, 180000];
+            var getm = [0, 1, 3];
+            var started = [0, 0, 0];
+            var storedUsers = [];
+            const userNameList = [];
+            const passWordList = [];
+            var userName, userPassword, userMoney;
+            function getUser(){
+                const userInfoStr = localStorage.getItem('userInfo');
+                if (userInfoStr) {
+                    const userObj = JSON.parse(userInfoStr);
+                    userName = userObj.username;
+                    userPassword = userObj.password;
+                    userMoney = userObj.money;
+                    document.getElementById("welcomeUser").innerHTML=userName;
+                    document.getElementById("moneyLeft").innerHTML="银行余额：$zg$ " + userMoney;
+                    document.getElementById("login").innerHTML="登出";
+                    const hpic = document.getElementById("sidebar_headPic");
+                    hpic.src = "./headPic/" + userName + ".jpg";
+                } else {
+                    window.alert("你似乎并没有登录");
+                    window.location.href = "./login.html";
+                }
+            }
+            function websiteOpen(){
+                var t = localStorage.getItem("m1Times");
+                if (t) {
+                    const userObj = JSON.parse(t);
+                    var tims = userObj.times;
+                    if (tims > 2) {
+                        window.alert("今天不能再看了");
+                        return ;
+                    }
+                    tims += 1;
+                    const ts = {times: tims};
+                    localStorage.setItem('m1Times', JSON.stringify(ts));
+                } else {
+                    var tims = 1;
+                    const ts = {times: tims};
+                    localStorage.setItem('m1Times', JSON.stringify(ts));
+                }
+
+                window.open("https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click", "_blank");
+                stm[1] = new Date();
+                started[1] = 1;
+            }
+            setInterval(function checkwebsiteOpen() {
+                if (!started[1]) return ;
+                enm[1] = new Date();
+                console.log("Time: " + (enm[1] - stm[1]));
+                if (enm[1] - stm[1] >= mt[1]) {
+                    window.alert("完成活动1！");
+                    userMoney += getm[1];
+                    document.getElementById("moneyLeft").innerHTML="银行余额：$zg$ " + userMoney;
+                    const user = {username: userName, password: userPassword, money: userMoney};
+                    localStorage.setItem('userInfo', JSON.stringify(user));
+                    started[1] = 0;
+                }
+            }, 1000);
+            function websiteOpen2(){
+                var t = localStorage.getItem("m2Times");
+                if (t) {
+                    const userObj = JSON.parse(t);
+                    var tims = userObj.times;
+                    if (tims > 2) {
+                        window.alert("今天不能再看了");
+                        return ;
+                    }
+                    tims += 1;
+                    const ts = {times: tims};
+                    localStorage.setItem('m2Times', JSON.stringify(ts));
+                } else {
+                    var tims = 1;
+                    const ts = {times: tims};
+                    localStorage.setItem('m2Times', JSON.stringify(ts));
+                }
+
+                window.open("https://chests-game.pages.dev", "_blank");
+                stm[2] = new Date();
+                started[2] = 1;
+            }
+            setInterval(function checkwebsiteOpen2() {
+                if (!started[2]) return ;
+                enm[2] = new Date();
+                console.log("Time: " + (enm[2] - stm[2]));
+                if (enm[2] - stm[2] >= mt[2]) {
+                    window.alert("完成活动2！");
+                    userMoney += getm[2];
+                    document.getElementById("moneyLeft").innerHTML="银行余额：$zg$ " + userMoney;
+                    const user = {username: userName, password: userPassword, money: userMoney};
+                    localStorage.setItem('userInfo', JSON.stringify(user));
+                    started[2] = 0;
+                }
+            }, 1000);
+            function websiteOpen3(){
+                window.open("./game_rur.html", "_blank");
+            }
+            function websiteOpen4(){
+                window.open("./game_zaogaoGo.html", "_blank");
+            }
+        </script>
+    </head>
+    <body onload="getUser();">
+        <div id="sidebar" class="sidebar">
+            <div id="sidebar_header" class="sidebar-header">
+                枣糕
+            </div>
+            <div class="sidebar-header">
+                <img id="sidebar_headPic" src="" alt="未登录" width="75" height="75"></img>
+            </div>
+            <ul class="nav-links">
+                <li><a href="./index.html">首页</a></li>
+                <li><a href="./shop.html">商店</a></li>
+                <li><a href="./bank.html">银行</a></li>
+                <li><a href="./login.html" id="login">登录</a></li>
+                <li><a href="./user.html" id="welcomeUser"></a></li>
+                <li><a href="./money.html">赚钱</a></li>
+            </ul>
+        </div>
+        <div id="main" class="main_content">
+            <h3 id="moneyLeft"></h3>
+            <table id="makeMoneyList">
+                <thead>
+                    最近枣糕活动
+                    <tr>
+                        <th>活动</th>
+                        <th>赚取枣糕币数量</th>
+                        <th>链接</th>
+                    </tr>
+                </thead>
+                <tr>
+                    <th>看B站视频超过2分钟</th>
+                    <th>$zg$ 1</th>
+                    <th>
+                        <button onclick="websiteOpen()">[link]</button>
+                    </th>
+                </tr>
+                <tr>
+                    <th>游玩CHESTS IN THE MAPS Canary Version (Web Edition)超过3分钟</th>
+                    <th>$zg$ 3</th>
+                    <th>
+                        <button onclick="websiteOpen2()">[link]</button>
+                    </th>
+                </tr>
+                <tr>
+                    <th>去读博（Russian roulette 俄罗斯轮盘游戏）</th>
+                    <th>见游戏规则</th>
+                    <th>
+                        <button onclick="websiteOpen3()">[link]</button>
+                    </th>
+                </tr>
+                <tr>
+                    <th>玩枣糕快跑！！！</th>
+                    <th>见游戏规则</th>
+                    <th>
+                        <button onclick="websiteOpen4()">[link]</button>
+                    </th>
+                </tr>
+            </table>
+        </div>
+    <!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+</body>
+</html>

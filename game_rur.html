@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh">
+    <head>
+        <title>枣糕真好吃 - 游戏：俄罗斯轮盘</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #f4f6f9;
+                margin-left: 200px;
+            }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 150px;
+                height: 100vh;
+                background-color: rgb(113, 133, 49);
+                color: #ecf0f1;
+                overflow-y: auto;
+                box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+                z-index: 1000;
+            }
+
+            .sidebar-header {
+                padding: 20px;
+                background-color: rgb(242, 92, 5);
+                text-align: center;
+                font-weight: bold;
+                border-bottom: 1px solid #34495e;
+                font-size: 30px;
+            }
+
+            .nav-links {
+                list-style: none;
+                padding: 10px 0;
+            }
+
+            .nav-links li a {
+                display: block;
+                padding: 15px 25px;
+                color: #bdc3c7;
+                text-decoration: none;
+                transition: all 0.3s ease;
+                border-left: 4px solid transparent;
+            }
+
+            .nav-links li a:hover,
+            .nav-links li a.active {
+                background-color: rgb(242, 92, 5);
+                color: #fff;
+                border-left-color: #3498db;
+            }
+            .main-content {
+                margin-left: 250px;
+                padding: 40px;
+                min-height: 100vh;
+                transition: margin-left 0.3s ease;
+            }
+
+            .content-card {
+                background: white;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+                margin-bottom: 20px;
+            }
+
+            h1 {
+                color: #2c3e50;
+                margin-bottom: 20px;
+            }
+
+            p {
+                line-height: 1.6;
+                color: #555;
+                margin-bottom: 15px;
+            }
+            @media (max-width: 768px) {
+                .sidebar {
+                    transform: translateX(-100%);
+                    transition: transform 0.3s ease;
+                }
+                
+                .sidebar.mobile-open {
+                    transform: translateX(0);
+                }
+
+                .main-content {
+                    margin-left: 0;
+                }
+                .mobile-toggle {
+                    display: block;
+                    position: fixed;
+                    top: 15px;
+                    right: 15px;
+                    z-index: 1001;
+                    background: #2c3e50;
+                    color: white;
+                    border: none;
+                    padding: 10px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                }
+            }
+
+            @media (min-width: 769px) {
+                .mobile-toggle {
+                    display: none;
+                }
+            }
+            .main_content{
+                text-align: center;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 12px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+                font-weight: bold;
+            }
+            tr:hover {
+                background-color: #f9f9f9;
+            }
+            .hidden {display: none;}
+        </style>
+        <script>
+            var storedUsers = [];
+            const userNameList = [];
+            const passWordList = [];
+            const prize = [0, 10, 25, 40, 78, 388];
+            var oppPlayer = -1;
+            var turn = 0;
+            var userName, userPassword, userMoney;
+            function getUser(){
+                const userInfoStr = localStorage.getItem('userInfo');
+                if (userInfoStr) {
+                    const userObj = JSON.parse(userInfoStr);
+                    userName = userObj.username;
+                    userPassword = userObj.password;
+                    userMoney = userObj.money;
+                    document.getElementById("welcomeUser").innerHTML=userName;
+                    document.getElementById("moneyLeft").innerHTML="银行余额：$zg$ " + userMoney;
+                    document.getElementById("login").innerHTML="登出";
+                    const hpic = document.getElementById("sidebar_headPic");
+                    hpic.src = "./headPic/" + userName + ".jpg";
+                } else {
+                    window.alert("你似乎并没有登录");
+                    window.location.href = "./login.html";
+                }
+            }
+            var oppZg1 = 0, oppZg2 = 0;
+            function init() {
+                oppZg1 = Math.floor(Math.random() * 5) + 1;
+                oppZg2 = Math.floor(Math.random() * 2) + 1;
+                document.getElementById("zg").innerHTML = "Mr.Zaogao (拥有枣糕币：" + oppZg1 + ")";
+                document.getElementById("bot").innerHTML = "人机 (拥有枣糕币：" + oppZg2 + ")";
+            }
+            function play1() {
+                var t = localStorage.getItem("m3Times");
+                if (t) {
+                    const userObj = JSON.parse(t);
+                    var tims = userObj.times;
+                    if (tims > 3) {
+                        window.alert("你会执迷不悟的");
+                        window.location.href = "./index.html";
+                    }
+                    tims += 1;
+                    const ts = {times: tims};
+                    localStorage.setItem('m3Times', JSON.stringify(ts));
+                } else {
+                    var tims = 1;
+                    const ts = {times: tims};
+                    localStorage.setItem('m3Times', JSON.stringify(ts));
+                }
+
+                const con = document.getElementById("rurConsole");
+                oppPlayer = 1;
+                document.getElementById("select").className = "hidden";
+                con.innerHTML += "<p style='color: springgreen;'>游戏开始，祝你好运\n</p>";
+                con.innerHTML += "<p style='color: red;'>Mr.Zaogao先\n</p>";
+            }
+            function play2() {
+                var t = localStorage.getItem("m3Times");
+                if (t) {
+                    const userObj = JSON.parse(t);
+                    var tims = userObj.times;
+                    console.log(tims);
+                    if (tims > 3) {
+                        window.alert("你会执迷不悟的");
+                        window.location.href = "./index.html";
+                    }
+                    tims += 1;
+                    const ts = {times: tims};
+                    localStorage.setItem('m3Times', JSON.stringify(ts));
+                } else {
+                    var tims = 1;
+                    const ts = {times: tims};
+                    localStorage.setItem('m3Times', JSON.stringify(ts));
+                }
+
+                const con = document.getElementById("rurConsole");
+                oppPlayer = 2;
+                document.getElementById("select").className = "hidden";
+                con.innerHTML += "<p style='color: springgreen;'>游戏开始，祝你好运\n</p>";
+                con.innerHTML += "<p style='color: red;'>Bot先\n</p>";
+            }
+            setInterval(function rurGame1() {
+                if (oppPlayer != 1) return ;
+                const con = document.getElementById("rurConsole");
+                if (turn == 0) {
+                    var death = Math.floor(Math.random() * 1000);
+                    if (death <= 5) {
+                        con.innerHTML += "<p style='color: red;'>一发子弹射过，Mr.Zaogao“死”了\n</p>";
+                        con.innerHTML += "<p style='color: red;'>Mr.Zaogao输了，你赢了\n</p>";
+                        oppPlayer = -1;
+                        userMoney += oppZg1;
+                        const user = {username: userName, password: userPassword, money: userMoney};
+                        localStorage.setItem('userInfo', JSON.stringify(user));
+                        window.alert("恭喜你活了下来！剩余枣糕币：$zg$" + userMoney);
+                    } else {
+                        con.innerHTML += "<p style='color: springgreen;'>Mr.Zaogao: 是空的\n</p>";
+                    }
+                } else {
+                    var death = Math.floor(Math.random() * 100);
+                    if (death <= 10) {
+                        con.innerHTML += "<p style='color: red;'>一发子弹射过，你“死”了\n</p>";
+                        con.innerHTML += "<p style='color: red;'>你输了，Mr.Zaogao赢了\n</p>";
+                        oppPlayer = -1;
+                        userMoney -= oppZg1;
+                        const user = {username: userName, password: userPassword, money: userMoney};
+                        localStorage.setItem('userInfo', JSON.stringify(user));
+                        window.alert("你“死”了，剩余枣糕币：" + userMoney);
+                        window.open("./rur_bomb.html", "_blank");
+                    } else {
+                        con.innerHTML += "<p style='color: springgreen;'>你: 是空的\n</p>";
+                    }
+                }
+                turn = 1 - turn;
+            }, 1000);
+            setInterval(function rurGame2() {
+                if (oppPlayer != 2) return ;
+                const con = document.getElementById("rurConsole");
+                if (turn == 0) {
+                    var death = Math.floor(Math.random() * 1000);
+                    if (death <= 90) {
+                        con.innerHTML += "<p style='color: red;'>一发子弹射过，bot“死”了\n</p>";
+                        con.innerHTML += "<p style='color: red;'>bot输了，你赢了\n</p>";
+                        oppPlayer = -1;
+                        userMoney += oppZg2;
+                        const user = {username: userName, password: userPassword, money: userMoney};
+                        localStorage.setItem('userInfo', JSON.stringify(user));
+                        window.alert("恭喜你活了下来！剩余枣糕币：$zg$" + userMoney);
+                    } else {
+                        con.innerHTML += "<p style='color: springgreen;'>bot: 是空的\n</p>";
+                    }
+                } else {
+                    var death = Math.floor(Math.random() * 1000);
+                    if (death <= 125) {
+                        con.innerHTML += "<p style='color: red;'>一发子弹射过，你“死”了\n</p>";
+                        con.innerHTML += "<p style='color: red;'>你输了，bot赢了\n</p>";
+                        oppPlayer = -1;
+                        userMoney -= oppZg2;
+                        const user = {username: userName, password: userPassword, money: userMoney};
+                        localStorage.setItem('userInfo', JSON.stringify(user));
+                        window.alert("你“死”了，剩余枣糕币：$zg$" + userMoney);
+                        window.location.href = "./rur_bomb.html";
+                    } else {
+                        con.innerHTML += "<p style='color: springgreen;'>你: 是空的\n</p>";
+                    }
+                }
+                turn = 1 - turn;
+            }, 1000);
+        </script>
+    </head>
+    <body onload="getUser(); init();">
+        <div id="sidebar" class="sidebar">
+            <div id="sidebar_header" class="sidebar-header">
+                枣糕
+            </div>
+            <div class="sidebar-header">
+                <img id="sidebar_headPic" src="" alt="未登录" width="75" height="75"></img>
+            </div>
+            <ul class="nav-links">
+                <li><a href="./index.html">首页</a></li>
+                <li><a href="./shop.html">商店</a></li>
+                <li><a href="./bank.html">银行</a></li>
+                <li><a href="./login.html" id="login">登录</a></li>
+                <li><a href="./user.html" id="welcomeUser"></a></li>
+                <li><a href="./money.html">赚钱</a></li>
+            </ul>
+        </div>
+        <div id="main" class="main_content">
+            <h2>俄罗斯轮盘游戏</h2>
+            <p>Russian roulette</p>
+            <p>Русская рулетка</p>
+            <h4 id="moneyLeft"></h4>
+            <h3>游戏规则</h3>
+            <p>你将会面对一个玩家和你一起游玩Russian roulette，有以下规则：</p>
+            <ol>
+                <li>一把左轮手枪6连发装有一颗子弹，参与者轮流向自己射击，“死亡”(不是真“死”)的一方输，另一方获得这一方的枣糕币</li>
+                <li>你可以选择和Mr.Zaogao或人机参与游戏</li>
+                <li>你“死亡”后会扣除对方枣糕币个数个枣糕币</li>
+            </ol>
+            <div id="select">
+                <h3>你要和谁玩Russian roulette？</h3>
+                <button id="zg" onclick="play1()" style="padding: 10px 30px; background-color: tomato;">Mr.Zaogao</button>
+                <button id="bot" onclick="play2()" style="padding: 10px 30px; background-color: springgreen;">人机</button>
+            </div>
+            <h3>日志</h3>
+            <div id="rurConsole"></div>
+        </div>
+    <!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+</body>
+</html>
